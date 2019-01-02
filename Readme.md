@@ -1,4 +1,5 @@
-# ConsoleGameEngine - Can convert RGB colors to console colors , and back.
+# ConsoleGameEngine
+- Can convert RGB colors to console colors , and back.
  - Can blend two console colors.
  - Can draw basic shapes.
  - Used kernel32.dll low-level api for output.
