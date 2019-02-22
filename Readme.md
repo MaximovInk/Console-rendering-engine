@@ -1,9 +1,8 @@
-# ConsoleGameEngine
+# ConsoleRenderingEngine
 - Can convert RGB colors to console colors , and back.
  - Can blend two console colors.
  - Can draw basic shapes.
- - Used kernel32.dll low-level api for output.
- and more..
+ - Contain examples : raycasting , image loading and drawing primitives
 
  Screenshots:
 ![Raycasting](https://i.imgur.com/8xcIdZs.png)
