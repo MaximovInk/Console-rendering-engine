@@ -1,91 +1,19 @@
-﻿using System;
+﻿using MaximovInk.ConsoleGameEngine.Core;
+using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using static MaximovInk.ConsoleGameEngine.Core.NativeMethods;
+
 namespace MaximovInk.ConsoleGameEngine
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CONSOLE_SCREEN_BUFFER_INFO
-    {
-        public COORD dwSize;
-        public COORD dwCursorPosition;
-        public short wAttributes;
-        public SmallRect srWindow;
-        public COORD dwMaximumWindowSize;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    public struct CharInfo
-    {
-        [FieldOffset(0)]
-        internal char UnicodeChar;
-        [FieldOffset(0)]
-        internal short AsciiChar;
-        [FieldOffset(2)]
-        internal short Attributes;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct SmallRect
-    {
-        public short Left;
-        public short Top;
-        public short Right;
-        public short Bottom;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct COORD
-    {
-        public short X;
-        public short Y;
-
-        public COORD(short x, short y)
-        {
-            X = x;
-            Y = y;
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct CONSOLE_FONT_INFO_EX
-    {
-        public uint cbSize;
-        public uint nFont;
-        public COORD dwFontSize;
-        public int FontFamily;
-        public int FontWeight;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-        public string FaceName;
-    }
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct CONSOLE_FONT_INFOEX
-    {
-        public uint cbSize;
-        public uint nFont;
-        public COORD dwFontSize;
-        public int FontFamily;
-        public int FontWeight;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-        public string FaceName;
-    }
-
     public class Engine
     {
         public short Width { get; protected set; }
         public short Height { get; protected set; }
         public CharInfo[] buffer;
         protected SmallRect rect;
-
-        protected const int STDIN = -10;
-        protected const int STDOUT = -11;
-        protected const int STDERR = -12;
-        private static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         public bool isRun = false;
 
@@ -95,14 +23,15 @@ namespace MaximovInk.ConsoleGameEngine
 
         protected string title;
 
-        protected bool ShowFPS;
+        protected bool ShowFPS = true;
         protected bool CountFrameRate = true;
 
         public Engine(short width = 240, short height = 80 , string Title ="Console engine", short fontw = 12, short fonth = 12, bool showFps = true )
         {
             Width = width;
             Height = height;
-            SetConsoleCP(437); SetConsoleOutputCP(437);
+            SetConsoleCP(437);
+            SetConsoleOutputCP(437);
             buffer = new CharInfo[Width * Height];
 
             rect = new SmallRect() { Left = 0, Top = 0, Right = Width, Bottom = Height };
@@ -116,6 +45,17 @@ namespace MaximovInk.ConsoleGameEngine
             ConsoleFontInfo.dwFontSize.Y = fonth;
 
             SetCurrentConsoleFontEx(GetStdHandle(STDOUT), false, ref ConsoleFontInfo);
+
+            IntPtr inHandle = GetStdHandle(STDIN);
+            uint mode = 0;
+            GetConsoleMode(inHandle, ref mode);
+            //mode &= ~ENABLE_QUICK_EDIT_MODE;
+            mode |= (uint)ConsoleModes.ENABLE_WINDOW_INPUT;
+            mode |= (uint)ConsoleModes.ENABLE_MOUSE_INPUT;
+            mode &= ~(uint)ConsoleModes.ENABLE_QUICK_EDIT_MODE;
+            
+
+            SetConsoleMode(inHandle, mode);
 
             Console.SetWindowSize(width, height);
             Console.SetBufferSize(width, height);
@@ -132,13 +72,11 @@ namespace MaximovInk.ConsoleGameEngine
             Thread = new Thread(GameThread);
             Thread.Priority = ThreadPriority.Highest;
             sw = new Stopwatch();
+            ConsoleListiner.Start();
+            ConsoleListiner.KeyEvent += OnKey;
+            ConsoleListiner.MouseEvent += OnMouse;
             OnStart();
             Thread.Start();
-        }
-
-        protected virtual void OnKeyPress(ConsoleKeyInfo key)
-        {
-
         }
 
         private void GameThread()
@@ -151,10 +89,13 @@ namespace MaximovInk.ConsoleGameEngine
                     sw.Start();
                 }
 
-                if (Console.KeyAvailable)
-                    OnKeyPress(Console.ReadKey(true));
                 OnUpdate();
                 OnDraw();
+                if (ShowFPS)
+                {
+                    Debug.WriteLine("GGG");
+                    DrawText(0, 0, "FPS:" + (1 / elapsed), 1);
+                }
 
                 if (f)
                 {
@@ -163,6 +104,19 @@ namespace MaximovInk.ConsoleGameEngine
                     sw.Reset();
                 }
             }
+            ConsoleListiner.Stop();
+            ConsoleListiner.KeyEvent -= OnKey;
+            ConsoleListiner.MouseEvent -= OnMouse;
+        }
+
+        protected virtual void OnKey(KEY_EVENT_RECORD e)
+        {
+           
+        }
+
+        protected virtual void OnMouse(MOUSE_EVENT_RECORD m)
+        {
+
         }
 
         public void DrawTriangle(short x1, short x2, short x3 , short y1, short y2, short y3, short character, short color)
@@ -334,6 +288,13 @@ namespace MaximovInk.ConsoleGameEngine
             {
                 buffer[y * Width + x] = @char;
             }
+        }
+
+        public CharInfo GetPixel(short x, short y)
+        {
+            x = (short)MathF.Clamp(x, 0, Width);
+            y = (short)MathF.Clamp(y, 0, Height);
+            return buffer[y * Width + x];
         }
 
         protected void Apply()

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -8,8 +7,6 @@ namespace MaximovInk.ConsoleGameEngine
 {
     public class ImageConverting : Engine
     {
-
-
         private Bitmap bitmap;
 
         public ImageConverting(short width = 460, short height = 150, string Title = "Raycasting", short fontw = 6, short fonth = 6, bool showFps = true)
@@ -21,7 +18,6 @@ namespace MaximovInk.ConsoleGameEngine
         {
             var b = new Bitmap("image.jpg");
             bitmap = (Bitmap)FixedSize(b, Height, Width, false);
-            bitmap.Save("image1.jpg");
 
             for (int x = 0; x < bitmap.Width; x++)
             {
@@ -34,6 +30,7 @@ namespace MaximovInk.ConsoleGameEngine
                     DrawPixel((short)x, (short)y, (short)ch, (short)color);
                 }
             }
+
             Apply();
 
         }

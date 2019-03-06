@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using static MaximovInk.ConsoleGameEngine.Core.NativeMethods;
 
 namespace MaximovInk.ConsoleGameEngine
 {
@@ -10,6 +10,8 @@ namespace MaximovInk.ConsoleGameEngine
 
         private float scaleX;
         private float scaleY;
+
+        private float lastMousePosX = 0;
 
         private int[,] worldMap = new int[,]
 {
@@ -42,9 +44,6 @@ namespace MaximovInk.ConsoleGameEngine
         double posX = 22, posY = 12;  //x and y start position
         double dirX = -1, dirY = 0; //initial direction vector
         double planeX = 0, planeY = 0.66; //the 2d raycaster version of camera plane
-
-        double time = 0; //time of current frame
-        double oldTime = 0; //time of previous frame
 
         public Raycasting(short width = 840/2, short height = 254/2, string Title = "Console engine", short fontw = 4, short fonth = 4, bool showFps = true) : base(width, height, Title, fontw, fonth, showFps)
         {
@@ -151,47 +150,59 @@ namespace MaximovInk.ConsoleGameEngine
             Apply();
         }
 
-        protected override void OnKeyPress(ConsoleKeyInfo key)
+        protected override void OnKey(KEY_EVENT_RECORD e)
         {
-            Debug.WriteLine(elapsed);
             double moveSpeed = 5.0 * elapsed;
-            double rotSpeed = 3.0 * elapsed;
 
-            if (key.KeyChar == 'a')
+            if (e.bKeyDown == true)
             {
-                double oldDirX = dirX;
-                dirX = dirX * Math.Cos(rotSpeed) - dirY * Math.Sin(rotSpeed);
-                dirY = oldDirX * Math.Sin(rotSpeed) + dirY * Math.Cos(rotSpeed);
-                double oldPlaneX = planeX;
-                planeX = planeX * Math.Cos(rotSpeed) - planeY * Math.Sin(rotSpeed);
-                planeY = oldPlaneX * Math.Sin(rotSpeed) + planeY * Math.Cos(rotSpeed);
-            }
-            if (key.KeyChar == 'd')
-            {
-                double oldDirX = dirX;
-                dirX = dirX * Math.Cos(-rotSpeed) - dirY * Math.Sin(-rotSpeed);
-                dirY = oldDirX * Math.Sin(-rotSpeed) + dirY * Math.Cos(-rotSpeed);
-                double oldPlaneX = planeX;
-                planeX = planeX * Math.Cos(-rotSpeed) - planeY * Math.Sin(-rotSpeed);
-                planeY = oldPlaneX * Math.Sin(-rotSpeed) + planeY * Math.Cos(-rotSpeed);
-            }
-            if (key.KeyChar == 'w')
-            {
-                if (posX + dirX * moveSpeed > 0 && posX + dirX * moveSpeed < worldMap.GetLength(0))
+                if (e.UnicodeChar == 'w')
                 {
-                    if (worldMap[(int)(posX + dirX * moveSpeed), (int)posY] == 0) posX += dirX * moveSpeed;
-                    if (worldMap[(int)(posX), (int)(posY + dirY * moveSpeed)] == 0) posY += dirY * moveSpeed;
+                    if (posX + dirX * moveSpeed > 0 && posX + dirX * moveSpeed < worldMap.GetLength(0))
+                    {
+                        if (worldMap[(int)(posX + dirX * moveSpeed), (int)posY] == 0) posX += dirX * moveSpeed;
+                        if (worldMap[(int)(posX), (int)(posY + dirY * moveSpeed)] == 0) posY += dirY * moveSpeed;
+                    }
+                }
+                if (e.UnicodeChar == 's')
+                {
+                    if (posX - dirX * moveSpeed > 0 && posX - dirX * moveSpeed < worldMap.GetLength(0))
+                    {
+                        if (worldMap[(int)(posX - dirX * moveSpeed), (int)posY] == 0) posX -= dirX * moveSpeed;
+                        if (worldMap[(int)(posX), (int)(posY - dirY * moveSpeed)] == 0) posY -= dirY * moveSpeed;
+                    }
+
                 }
             }
-            if (key.KeyChar == 's')
+        }
+
+        protected override void OnMouse(MOUSE_EVENT_RECORD m)
+        {
+            double rotSpeed = 3.0 * elapsed;
+            if (m.dwMousePosition.X != lastMousePosX )
             {
-                if (posX - dirX * moveSpeed > 0 && posX - dirX * moveSpeed < worldMap.GetLength(0))
+                float deltaX = m.dwMousePosition.X - lastMousePosX;
+                lastMousePosX = m.dwMousePosition.X;
+                if (deltaX > 0)
                 {
-                    if (worldMap[(int)(posX - dirX * moveSpeed), (int)posY] == 0) posX -= dirX * moveSpeed;
-                    if (worldMap[(int)(posX), (int)(posY - dirY * moveSpeed)] == 0) posY -= dirY * moveSpeed;
+                    double oldDirX = dirX;
+                    dirX = dirX * Math.Cos(-rotSpeed) - dirY * Math.Sin(-rotSpeed);
+                    dirY = oldDirX * Math.Sin(-rotSpeed) + dirY * Math.Cos(-rotSpeed);
+                    double oldPlaneX = planeX;
+                    planeX = planeX * Math.Cos(-rotSpeed) - planeY * Math.Sin(-rotSpeed);
+                    planeY = oldPlaneX * Math.Sin(-rotSpeed) + planeY * Math.Cos(-rotSpeed);
                 }
- 
+                else
+                {
+                    double oldDirX = dirX;
+                    dirX = dirX * Math.Cos(rotSpeed) - dirY * Math.Sin(rotSpeed);
+                    dirY = oldDirX * Math.Sin(rotSpeed) + dirY * Math.Cos(rotSpeed);
+                    double oldPlaneX = planeX;
+                    planeX = planeX * Math.Cos(rotSpeed) - planeY * Math.Sin(rotSpeed);
+                    planeY = oldPlaneX * Math.Sin(rotSpeed) + planeY * Math.Cos(rotSpeed);
+                }
             }
+
         }
 
         protected override void OnStart()

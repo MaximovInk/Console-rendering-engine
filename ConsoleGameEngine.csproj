@@ -60,14 +60,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums.cs" />
-    <Compile Include="Engine.cs" />
-    <Compile Include="ColorUtilites.cs" />
-    <Compile Include="Examples\Primitives.cs" />
+    <Compile Include="Core\ConsoleListiner.cs" />
+    <Compile Include="Core\Enums.cs" />
+    <Compile Include="Core\Engine.cs" />
+    <Compile Include="Core\ColorUtilites.cs" />
+    <Compile Include="Core\Examples\Primitives.cs" />
+    <Compile Include="Core\MathF.cs" />
+    <Compile Include="Core\NativeMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Examples\ImageConverting.cs" />
-    <Compile Include="Examples\Raycasting.cs" />
+    <Compile Include="Core\Examples\ImageConverting.cs" />
+    <Compile Include="Core\Examples\Raycasting.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -86,7 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="image.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
